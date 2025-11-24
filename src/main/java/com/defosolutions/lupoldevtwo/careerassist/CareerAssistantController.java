@@ -17,7 +17,7 @@ public class CareerAssistantController {
     }
 
     @GetMapping("/chat")
-    public String chat(@RequestParam String userInput) {
+    public String chat(@RequestParam(defaultValue = "What career can I do if I like to dance a lot?") String userInput) {
         var systemInstructions = """
             You are a helpful career assistant. 
             You can ONLY provide accurate information about career advice, job searching, and professional development
