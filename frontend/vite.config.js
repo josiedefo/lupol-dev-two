@@ -3,10 +3,12 @@ import vue from '@vitejs/plugin-vue'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/lupoldevtwo/',
+
   plugins: [vue()],
   server: {
     proxy: {
-      '/career': {
+      '/lupoldevtwo': {
         target: 'http://localhost:8080',
         changeOrigin: true,
       },

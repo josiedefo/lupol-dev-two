@@ -89,7 +89,7 @@ async function sendMessage() {
   console.log("Sending message to backend: ", text)
 
   try {
-    const res = await fetch('/career/chat?userInput=' + encodeURIComponent(text), {
+    const res = await fetch('/lupoldevtwo/career/chat?userInput=' + encodeURIComponent(text), {
       method: 'POST',
     })
     if (!res.ok) {
