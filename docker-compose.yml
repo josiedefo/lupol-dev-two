@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  lupol-dev-two:
+    build: .
+    container_name: lupol-dev-two-app
+    ports:
+      - "8080:8080"
+    environment:
+      # Optional JVM flags:
+      # JAVA_OPTS: "-Xms256m -Xmx512m -Dspring.profiles.active=prod"
+      JAVA_OPTS: "-Dspring.profiles.active=local"
