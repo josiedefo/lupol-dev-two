@@ -1,0 +1,278 @@
+🚀 Lupol Dev Two — Spring Boot + Vue + Docker + AWS App Runner
+
+Lupol Dev Two is a full-stack web application that combines:
+
+Java 21 + Spring Boot backend
+
+Vue.js (Vite) frontend
+
+A backend endpoint /lupoldevtwo/career/chat that integrates with OpenAI via Spring’s ChatClient
+
+A Dockerized build that packages both backend + frontend
+
+Optional CI-friendly Maven build that compiles the Vue app before packaging
+
+AWS App Runner deployment for a public URL
+
+🧱 Project Structure
+.
+├── frontend/              # Vue.js (Vite) app
+│   ├── src/
+│   ├── package.json
+│   └── vite.config.js
+├── src/main/java/...      # Spring Boot backend
+├── src/main/resources/
+│   ├── application.properties
+│   └── static/            # Frontend build artifacts copied here
+├── Dockerfile             # Multi-stage Docker build
+├── docker-compose.yml     # Optional local runner
+├── .dockerignore
+└── pom.xml                # Maven build with frontend integration
+
+🔧 Development Workflow
+1. Start the Spring Boot backend (dev mode)
+mvn spring-boot:run
+
+
+It runs on:
+
+http://localhost:8080/lupoldevtwo/
+
+2. Start the frontend (dev mode)
+cd frontend
+npm install
+npm run dev
+
+
+Dev frontend runs on:
+
+http://localhost:5173/lupoldevtwo/
+
+
+Proxy rules in vite.config.js forward API calls to the backend automatically.
+
+🛠️ Maven Build (Backend + Frontend)
+
+The project uses frontend-maven-plugin to:
+
+Install Node/npm locally (isolated)
+
+Run npm install
+
+Run npm run build (Vite)
+
+Copy frontend/dist → src/main/resources/static/
+
+Package everything into one Spring Boot JAR
+
+Build:
+
+mvn clean package -DskipTests
+
+
+Final JAR is created at:
+
+target/*.jar
+
+
+Running the JAR:
+
+java -jar target/lupol-dev-two.jar
+
+🐳 Docker Support
+
+The app is fully Dockerized using a multi-stage build:
+
+Stage 1: Use Maven + Node to build the backend + frontend
+
+Stage 2: Copy the generated JAR into a lightweight JRE image
+
+Build image
+docker build -t lupol-dev-two .
+
+Run locally
+docker run --rm -p 8080:8080 \
+  -e OPENAI_API_KEY=<your-key> \
+  lupol-dev-two
+
+
+Open in browser:
+
+http://localhost:8080/lupoldevtwo/
+
+🐳 docker-compose (local convenience)
+docker compose up --build
+
+
+This uses the same Dockerfile and exposes port 8080.
+
+🔐 Environment Variables
+Variable	Required	Description
+OPENAI_API_KEY	✅ Yes	API key used by backend to call OpenAI via ChatClient
+SPRING_PROFILES_ACTIVE	Optional	Set to prod or custom profile
+JAVA_OPTS	Optional	JVM memory/GC flags in Docker
+
+Use environment variables instead of hardcoding secrets in application.properties.
+
+Spring resolves them like:
+
+openai.api.key=${OPENAI_API_KEY}
+
+🌐 Backend API
+POST /lupoldevtwo/career/chat
+
+Accepts:
+
+userInput=<text>
+
+
+Returns:
+
+Plain text response from Spring Boot
+
+Internally calls OpenAI Chat Completion via Spring ChatClient
+
+🚢 Deploying to AWS App Runner
+
+AWS App Runner provides a simple “run my Docker container publicly” service with auto-scaling and HTTPS.
+
+Below are the end-to-end steps.
+
+1. Create ECR Repository
+aws ecr create-repository \
+  --repository-name lupol-dev-two \
+  --region us-east-1
+
+
+Save the output ARN:
+
+123456789012.dkr.ecr.us-east-1.amazonaws.com/lupol-dev-two
+
+2. Authenticate & Push Image to ECR
+aws ecr get-login-password --region us-east-1 \
+  | docker login --username AWS --password-stdin 123456789012.dkr.ecr.us-east-1.amazonaws.com
+
+
+Build:
+
+docker build -t lupol-dev-two .
+
+
+Tag:
+
+docker tag lupol-dev-two:latest \
+123456789012.dkr.ecr.us-east-1.amazonaws.com/lupol-dev-two:latest
+
+
+Push:
+
+docker push 123456789012.dkr.ecr.us-east-1.amazonaws.com/lupol-dev-two:latest
+
+3. Create AWS App Runner Service
+
+Go to AWS Console → App Runner
+
+Click Create Service
+
+Source: Container Registry
+
+Provider: ECR
+
+Select image: lupol-dev-two:latest
+
+Port: 8080
+
+Instance size:
+
+0.25 vCPU / 0.5–1GB RAM (good for small apps)
+
+Env Vars:
+
+OPENAI_API_KEY=sk-xxxx
+
+SPRING_PROFILES_ACTIVE=prod (optional)
+
+Auto-create IAM role for ECR access
+
+Click Create & Deploy
+
+Within 2–3 minutes, App Runner will give you a URL:
+
+https://<random>.awsapprunner.com
+
+
+Your app lives under the Spring context-path:
+
+https://<random>.awsapprunner.com/lupoldevtwo/
+
+🔍 Logs & Monitoring
+
+App Runner automatically streams:
+
+stdout/stderr from your container
+
+Spring Boot logs
+
+Startup errors
+
+Health check failures
+
+All viewable under:
+
+App Runner → Your Service → Logs
+
+🔄 Redeploying After Code Changes
+
+Rebuild Docker image
+
+Re-tag with same ECR tag (latest or versioned)
+
+Push again
+
+In App Runner → Deployments → Deploy latest image
+
+Or enable Automatic Deployment to redeploy on new image push.
+
+🛡️ HTTPS / Domains
+
+App Runner automatically provisions:
+
+HTTPS
+
+TLS
+
+Certificates
+
+To use your custom domain:
+
+Go to App Runner → Custom Domains
+
+Add your domain
+
+Add CNAME record to your DNS
+
+📦 Summary
+
+This project is a modern full-stack containerized application using:
+
+Vue 3 → Vite dev server + production build
+
+Spring Boot → Chat backend + OpenAI integration
+
+Maven → orchestrates front + back build
+
+Docker → deployable anywhere
+
+AWS App Runner → simplest public hosting on AWS
+
+With this setup you can:
+
+Develop frontend/back independently
+
+Build everything into a single JAR
+
+Run locally or remotely in Docker
+
+Deploy to AWS in minutes
+
+Automatically scale on demand

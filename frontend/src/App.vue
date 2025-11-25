@@ -1,6 +1,6 @@
 <template>
   <div class="app">
-    <h1 class="title">Career Chat</h1>
+    <h1 class="title">Lupol Career Chat</h1>
 
     <div class="chat-container">
       <div class="messages" ref="messagesContainer">
@@ -135,7 +135,7 @@ watch(
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: left;
   background: #f3f4f6;
   padding: 2rem 1rem;
   box-sizing: border-box;
@@ -146,6 +146,7 @@ watch(
     sans-serif;
   font-weight: 600;
   margin-bottom: 1rem;
+  color: blue;
 }
 
 .chat-container {
