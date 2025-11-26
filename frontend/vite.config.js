@@ -8,7 +8,7 @@ export default defineConfig({
   plugins: [vue()],
   server: {
     proxy: {
-      '/lupoldevtwo': {
+      '/lupoldevtwo/career': {
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
