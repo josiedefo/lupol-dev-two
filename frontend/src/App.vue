@@ -1,133 +1,70 @@
 <template>
   <div class="app">
-    <h1 class="title">Lupol Career Chat</h1>
-
-    <div class="chat-container">
-      <div class="messages" ref="messagesContainer">
-        <div
-          v-for="(msg, index) in messages"
-          :key="index"
-          class="message-row"
-          :class="msg.from"
-        >
-          <div class="bubble">
-            <div class="sender">
-              {{ msg.from === 'user' ? 'You' : 'Assistant' }}
-            </div>
-            <div class="text">
-              {{ msg.text }}
-            </div>
-          </div>
-        </div>
-
-        <div v-if="loading" class="message-row bot">
-          <div class="bubble typing">
-            <div class="sender">Assistant</div>
-            <div class="text">Typing...</div>
-          </div>
-        </div>
+    <header class="app-header">
+      <div class="brand">
+        <span class="logo-dot"></span>
+        <span class="brand-text">Lupol Careers</span>
       </div>
 
-      <form class="input-area" @submit.prevent="sendMessage">
-        <textarea
-          v-model="currentMessage"
-          class="input"
-          placeholder="Type your question here and press Enter..."
-          @keydown.enter.exact.prevent="sendMessage"
-          @keydown.shift.enter.stop
-        ></textarea>
+      <button
+        v-if="started"
+        class="ghost-button"
+        @click="started = false"
+      >
+        ⟵ Back to home
+      </button>
+    </header>
 
-        <div class="actions">
-          <span v-if="error" class="error">Error: {{ error }}</span>
+    <main class="app-main">
+      <!-- Landing page -->
+      <section v-if="!started" class="landing">
+        <div class="hero">
+          <h1 class="hero-title">Welcome to the best career site</h1>
+          <p class="hero-subtitle">
+            Turn your passions into a clear, confident career path.
+            Our AI career coach helps you explore options, uncover your strengths,
+            and plan your next step — in minutes, not months.
+          </p>
 
-          <button
-            type="submit"
-            class="send-button"
-            :disabled="!currentMessage.trim() || loading"
-          >
-            {{ loading ? 'Sending...' : 'Send' }}
-          </button>
+          <ul class="hero-list">
+            <li>✨ Discover careers that match your passions</li>
+            <li>🧭 Get personalized guidance for transitions and promotions</li>
+            <li>📌 Explore reskilling, upskilling, and side projects</li>
+          </ul>
+
+          <div class="hero-actions">
+            <button class="primary-button" @click="started = true">
+              Get started
+            </button>
+            <p class="hero-footnote">
+              No signup. No forms. Just practical guidance.
+            </p>
+          </div>
         </div>
-      </form>
-    </div>
+
+        <div class="hero-panel">
+          <h2>What can I ask?</h2>
+          <ul class="hero-panel-list">
+            <li>“What career fits someone who loves dancing?”</li>
+            <li>“How can I move from teaching to tech?”</li>
+            <li>“What jobs can I work remotely with my skills?”</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Chat page -->
+      <section v-else class="chat-section">
+        <ChatAssistant />
+      </section>
+    </main>
   </div>
 </template>
 
 <script setup>
-import { ref, nextTick, watch } from 'vue'
+import { ref } from 'vue'
+import ChatAssistant from './components/ChatAssistant.vue'
 
-const messages = ref([
-  {
-    from: 'bot',
-    text: 'Hi! Ask me anything about your career.',
-  },
-])
-
-const currentMessage = ref('')
-const loading = ref(false)
-const error = ref('')
-const messagesContainer = ref(null)
-
-async function sendMessage() {
-  const text = currentMessage.value.trim()
-  if (!text || loading.value) return
-
-  // Clear error
-  error.value = ''
-
-  // Add user message to chat
-  messages.value.push({
-    from: 'user',
-    text,
-  })
-
-  currentMessage.value = ''
-  scrollToBottom()
-
-  loading.value = true
-
-  console.log("Sending message to backend: ", text)
-
-  try {
-    const res = await fetch('/lupoldevtwo/career/chat?userInput=' + encodeURIComponent(text), {
-      method: 'POST',
-    })
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`)
-    }
-
-    // ASSUMPTION: backend returns JSON like { reply: "..." }
-    //const data = await res.json()
-    //const replyText = data.reply ?? JSON.stringify(data)
-    const replyText = await res.text()
-
-    messages.value.push({
-      from: 'bot',
-      text: replyText,
-    })
-  } catch (e) {
-    console.error(e)
-    error.value = e.message || 'Something went wrong'
-  } finally {
-    loading.value = false
-    scrollToBottom()
-  }
-}
-
-function scrollToBottom() {
-  nextTick(() => {
-    const el = messagesContainer.value
-    if (el) {
-      el.scrollTop = el.scrollHeight
-    }
-  })
-}
-
-// Also auto-scroll whenever messages change
-watch(
-  () => messages.value.length,
-  () => scrollToBottom()
-)
+const started = ref(false)
 </script>
 
 <style scoped>

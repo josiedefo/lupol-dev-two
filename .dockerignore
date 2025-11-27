@@ -1,6 +1,6 @@
-target
 frontend/node_modules
 frontend/dist
+docs/cmd-save.txt
 .git
 .gitignore
 .idea
