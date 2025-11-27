@@ -3,6 +3,8 @@ package com.defosolutions.lupoldevtwo.careerassist;
 import java.util.logging.Logger;
 
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,8 +18,11 @@ public class CareerAssistantController {
     private final ChatClient chatClient;
     private static final Logger log = Logger.getLogger(CareerAssistantController.class.getName());
 
-    public CareerAssistantController(ChatClient.Builder builder) {
-        this.chatClient = builder.build();
+    public CareerAssistantController(ChatClient.Builder builder, ChatMemory chatMemory) {
+        this.chatClient = builder
+            .defaultAdvisors(MessageChatMemoryAdvisor.builder(chatMemory)
+                .build())
+            .build();;
     }
 
     @PostMapping("/chat")
