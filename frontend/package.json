@@ -6,13 +6,19 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "clean": "rimraf dist node_modules",
+    "tw:check": "tailwindcss -v"
   },
   "dependencies": {
     "vue": "^3.5.24"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.1",
+    "autoprefixer": "10.4.19",
+    "postcss": "8.4.38",
+    "rimraf": "5.0.5",
+    "tailwindcss": "3.4.9",
     "vite": "^7.2.4"
   }
 }
