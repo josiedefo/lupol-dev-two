@@ -88,7 +88,7 @@ import { ensureVisitorId } from '../analytics/client'
 const visitorId = ref(ensureVisitorId()) // why: stable browser id reused across features
 
 const messages = ref([
-  { from: 'bot', text: 'Hi! I’m your AI career assistant. What would you like to explore today?' },
+  { from: 'bot', text: 'Hi! I’m Lupol, your AI career assistant. I\'m here to help you switch careers with confidence. Tell me your strengths and passions—let’s find your best fit' },
 ])
 
 const currentMessage = ref('')
