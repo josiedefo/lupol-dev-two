@@ -6,6 +6,7 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,8 +26,12 @@ public class CareerAssistantController {
     }
 
     @PostMapping("/chat")
-    public String chat(@RequestParam(defaultValue = "What career can I do if I like to dance a lot?") String userInput) {
-        log.info("Received user input: "+userInput);
+    public String chat(@RequestParam(defaultValue = "What career can I do if I like to dance a lot?") String userInput, 
+        @RequestHeader(value = "X-Visitor-Id", required = false) String visitorIdHeader) {
+        
+        String visitorId = (visitorIdHeader != null && !visitorIdHeader.isBlank()) ? visitorIdHeader : "";
+        log.info("Received user " + visitorId + " input: " + userInput);
+
         var systemInstructions = """
             You are a helpful career assistant. 
             You can ONLY provide accurate information about career advice, job searching, and professional development
@@ -36,11 +41,14 @@ public class CareerAssistantController {
             If asked about anything else, respond with: "I can only assist with career-related inquiries."
             """;
             
-        return chatClient.prompt()
+        String chatResponse =  chatClient.prompt()
             .system(systemInstructions)
             .user(userInput)
             .call()
             .content();
+        log.info("Responding to user " + visitorId + " with: " + chatResponse);
+        
+        return chatResponse;
     }
 
 }

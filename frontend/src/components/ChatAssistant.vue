@@ -83,6 +83,9 @@
 <script setup>
 import { ref, nextTick, watch, onMounted, onBeforeUnmount } from 'vue'
 import { goHome } from '../viewState'
+import { ensureVisitorId } from '../analytics/client'
+
+const visitorId = ref(ensureVisitorId()) // why: stable browser id reused across features
 
 const messages = ref([
   { from: 'bot', text: 'Hi! I’m your AI career assistant. What would you like to explore today?' },
@@ -106,7 +109,7 @@ async function sendMessage() {
   try {
     const res = await fetch(
       '/lupoldevtwo/career/chat?userInput=' + encodeURIComponent(text),
-      { method: 'POST' }
+      { method: 'POST', headers: { 'X-Visitor-Id': visitorId.value } }
     )
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const replyText = await res.text()
