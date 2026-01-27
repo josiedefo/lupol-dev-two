@@ -4,7 +4,8 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 src/main/resources/application-local.properties
-docs/cmd-save.txt
+docs/
+first_page_full-12012025.png
 
 ### STS ###
 .apt_generated

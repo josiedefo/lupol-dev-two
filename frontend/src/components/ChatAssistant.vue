@@ -37,9 +37,8 @@
               <div class="sender">
                 {{ msg.from === 'user' ? 'You' : 'Assistant' }}
               </div>
-              <div class="text">
-                {{ msg.text }}
-              </div>
+              <div class="text" v-if="msg.from === 'user'">{{ msg.text }}</div>
+              <div class="text markdown" v-else v-html="parseMarkdown(msg.text)"></div>
             </div>
           </div>
 
@@ -135,6 +134,37 @@ watch(() => messages.value.length, () => scrollToBottom())
 function onKey(e) { if (e.key === 'Escape') goHome() }
 onMounted(() => window.addEventListener('keydown', onKey))
 onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
+
+/** Lightweight markdown parser for bot responses */
+function parseMarkdown(text) {
+  if (!text) return ''
+  let html = text
+    // Escape HTML to prevent XSS
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    // Bold: **text** or __text__
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/__(.+?)__/g, '<strong>$1</strong>')
+    // Italic: *text* or _text_
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/_(.+?)_/g, '<em>$1</em>')
+    // Inline code: `code`
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    // Headers: ### text
+    .replace(/^### (.+)$/gm, '<h4>$1</h4>')
+    .replace(/^## (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^# (.+)$/gm, '<h2>$1</h2>')
+    // Unordered lists: - item or * item
+    .replace(/^[\-\*] (.+)$/gm, '<li>$1</li>')
+    // Numbered lists: 1. item
+    .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
+    // Wrap consecutive <li> in <ul>
+    .replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>')
+    // Line breaks
+    .replace(/\n/g, '<br>')
+  return html
+}
 </script>
 
 <style scoped>
@@ -196,6 +226,18 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 .sender { font-size: .75rem; opacity: .75; margin-bottom: .25rem; }
 .text { white-space: pre-wrap; font-size: .9rem; }
 .typing .text { font-style: italic; }
+
+/* Markdown styles for bot messages */
+.text.markdown { white-space: normal; }
+.text.markdown :deep(strong) { font-weight: 700; color: #1e40af; }
+.text.markdown :deep(em) { font-style: italic; }
+.text.markdown :deep(code) { background: #f1f5f9; padding: 0.1rem 0.3rem; border-radius: 4px; font-family: monospace; font-size: 0.85em; }
+.text.markdown :deep(h2), .text.markdown :deep(h3), .text.markdown :deep(h4) { margin: 0.5rem 0 0.25rem; font-weight: 600; }
+.text.markdown :deep(h2) { font-size: 1.1rem; }
+.text.markdown :deep(h3) { font-size: 1rem; }
+.text.markdown :deep(h4) { font-size: 0.95rem; }
+.text.markdown :deep(ul) { margin: 0.25rem 0; padding-left: 1.25rem; list-style: disc; }
+.text.markdown :deep(li) { margin: 0.15rem 0; }
 
 /* >>> Brighter input section <<< */
 .input-area {
