@@ -123,14 +123,25 @@ POST /lupoldevtwo/career/chat
 
 Accepts:
 
-userInput=<text>
+userInput=<text> (query param)
+X-Visitor-Id: <uuid> (header — used to maintain per-user conversation memory)
 
 
 Returns:
 
-Plain text response from Spring Boot
+Markdown-formatted plain text response from the AI assistant
 
-Internally calls OpenAI Chat Completion via Spring ChatClient
+Each response includes career suggestions with:
+  - Fit explanation and learning time
+  - Earning potential (entry / mid-career / top earner)
+  - Recommended training programs with direct links and costs
+
+Internally calls OpenAI GPT-4o via Spring AI ChatClient with conversation memory
+
+POST /lupoldevtwo/api/analytics/visit
+
+Accepts: JSON body with visit metadata
+Used for visitor tracking and conversation logging
 
 🚢 Deploying to AWS App Runner
 

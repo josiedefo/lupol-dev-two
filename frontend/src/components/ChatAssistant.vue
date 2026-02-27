@@ -55,8 +55,8 @@
           <textarea
             v-model="currentMessage"
             class="input"
-            placeholder="Ask me anything and press Enter..."
-            @keydown.enter.exact.prevent="sendMessage"
+            :placeholder="isMobile ? 'Type your message and tap Send...' : 'Ask me anything and press Enter...'"
+            @keydown.enter.exact="handleEnter"
             @keydown.shift.enter.stop
             :aria-busy="loading ? 'true' : 'false'"
           ></textarea>
@@ -85,6 +85,7 @@ import { goHome } from '../viewState'
 import { ensureVisitorId } from '../analytics/client'
 
 const visitorId = ref(ensureVisitorId()) // why: stable browser id reused across features
+const isMobile = ref(false)
 
 const messages = ref([
   { from: 'bot', text: 'Hi! I’m Lupol, your AI career assistant. I\'m here to help you switch careers with confidence. Tell me your strengths and passions—let’s find your best fit' },
@@ -131,18 +132,48 @@ function scrollToBottom() {
 
 watch(() => messages.value.length, () => scrollToBottom())
 
+function handleEnter(e) {
+  if (!isMobile.value) {
+    e.preventDefault()
+    sendMessage()
+  }
+  // on mobile: let the default textarea behaviour create a new line
+}
+
 function onKey(e) { if (e.key === 'Escape') goHome() }
-onMounted(() => window.addEventListener('keydown', onKey))
+onMounted(() => {
+  window.addEventListener('keydown', onKey)
+  isMobile.value = window.matchMedia('(pointer: coarse)').matches
+})
 onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
 /** Lightweight markdown parser for bot responses */
 function parseMarkdown(text) {
   if (!text) return ''
-  let html = text
-    // Escape HTML to prevent XSS
+
+  // Step 1: Extract markdown links [label](url) before HTML escaping, replace with placeholders
+  const links = []
+  let html = text.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, (_, label, url) => {
+    const i = links.length
+    links.push({ label, url })
+    return `\x00LINK${i}\x00`
+  })
+
+  // Step 2: Escape remaining HTML to prevent XSS
+  html = html
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
+
+  // Step 3: Restore links as safe <a> tags (only http/https URLs allowed, already enforced above)
+  html = html.replace(/\x00LINK(\d+)\x00/g, (_, i) => {
+    const { label, url } = links[Number(i)]
+    const safeLabel = label.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer">${safeLabel}</a>`
+  })
+
+  // Step 4: Apply remaining markdown rules
+  html = html
     // Bold: **text** or __text__
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/__(.+?)__/g, '<strong>$1</strong>')
@@ -163,6 +194,7 @@ function parseMarkdown(text) {
     .replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>')
     // Line breaks
     .replace(/\n/g, '<br>')
+
   return html
 }
 </script>
@@ -238,6 +270,8 @@ function parseMarkdown(text) {
 .text.markdown :deep(h4) { font-size: 0.95rem; }
 .text.markdown :deep(ul) { margin: 0.25rem 0; padding-left: 1.25rem; list-style: disc; }
 .text.markdown :deep(li) { margin: 0.15rem 0; }
+.text.markdown :deep(a) { color: #2563eb; text-decoration: underline; word-break: break-word; }
+.text.markdown :deep(a:hover) { color: #1d4ed8; }
 
 /* >>> Brighter input section <<< */
 .input-area {
