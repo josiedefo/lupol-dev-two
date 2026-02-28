@@ -33,19 +33,45 @@
             class="message-row"
             :class="msg.from"
           >
+            <!-- Bot avatar -->
+            <div v-if="msg.from === 'bot'" class="avatar bot-avatar" aria-hidden="true">
+              <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="ag" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#9D7BFF"/>
+                    <stop offset="100%" stop-color="#6F7DFF"/>
+                  </linearGradient>
+                </defs>
+                <circle cx="32" cy="32" r="28" fill="url(#ag)"/>
+                <path d="M27 20l13 12-13 12v-6l7-6-7-6v-6z" fill="white"/>
+              </svg>
+            </div>
+
             <div class="bubble">
-              <div class="sender">
-                {{ msg.from === 'user' ? 'You' : 'Assistant' }}
-              </div>
+              <div class="sender">{{ msg.from === 'user' ? 'You' : 'Lupol' }}</div>
               <div class="text" v-if="msg.from === 'user'">{{ msg.text }}</div>
               <div class="text markdown" v-else v-html="parseMarkdown(msg.text)"></div>
+            </div>
+
+            <!-- User avatar -->
+            <div v-if="msg.from === 'user'" class="avatar user-avatar" aria-hidden="true">
+              <span>You</span>
             </div>
           </div>
 
           <div v-if="loading" class="message-row bot">
-            <div class="bubble typing">
-              <div class="sender">Assistant</div>
-              <div class="text">Typing...</div>
+            <div class="avatar bot-avatar" aria-hidden="true">
+              <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs><linearGradient id="ag2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#9D7BFF"/><stop offset="100%" stop-color="#6F7DFF"/></linearGradient></defs>
+                <circle cx="32" cy="32" r="28" fill="url(#ag2)"/>
+                <path d="M27 20l13 12-13 12v-6l7-6-7-6v-6z" fill="white"/>
+              </svg>
+            </div>
+            <div class="bubble typing-bubble">
+              <div class="sender">Lupol</div>
+              <div class="typing-dots">
+                <span></span><span></span><span></span>
+              </div>
             </div>
           </div>
         </div>
@@ -194,6 +220,11 @@ function parseMarkdown(text) {
     .replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>')
     // Line breaks
     .replace(/\n/g, '<br>')
+    // Remove <br> immediately before or after block elements (headings, lists)
+    .replace(/(<br>)+(<\/?(?:h[2-4]|ul|li))/g, '$2')
+    .replace(/(<\/(?:h[2-4]|ul|li)>)(<br>)+/g, '$1')
+    // Collapse 3+ consecutive <br> down to 2
+    .replace(/(<br>){3,}/g, '<br><br>')
 
   return html
 }
@@ -243,35 +274,166 @@ function parseMarkdown(text) {
 }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: #34d399; }
 
-/* Existing chat styles */
+/* Chat layout */
 .chat-wrapper { display: flex; flex-direction: column; gap: 1rem; color: #111827; padding: 1rem; }
 .chat-title { font-size: 1.5rem; font-weight: 600; color: #fff; }
 .chat-subtitle { color: #cbd5e1; font-size: 0.95rem; }
 .chat-card { background: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); padding: 1rem; display: flex; flex-direction: column; min-height: 350px; }
-.messages { flex: 1; overflow-y: auto; max-height: 60vh; padding: 0.5rem; box-sizing: border-box; }
-.message-row { display: flex; margin-bottom: 0.5rem; }
-.message-row.user { justify-content: flex-end; }
-.message-row.bot { justify-content: flex-start; }
-.bubble { max-width: 75%; padding: 0.5rem 0.75rem; border-radius: 12px; }
-.message-row.user .bubble { background: #2563eb; color: #ffffff; border-bottom-right-radius: 4px; }
-.message-row.bot .bubble { background: #e5e7eb; color: #111827; border-bottom-left-radius: 4px; }
-.sender { font-size: .75rem; opacity: .75; margin-bottom: .25rem; }
-.text { white-space: pre-wrap; font-size: .9rem; }
-.typing .text { font-style: italic; }
+.messages { flex: 1; overflow-y: auto; max-height: 60vh; padding: 0.75rem 0.5rem; box-sizing: border-box; display: flex; flex-direction: column; gap: 1rem; }
 
-/* Markdown styles for bot messages */
-.text.markdown { white-space: normal; }
-.text.markdown :deep(strong) { font-weight: 700; color: #1e40af; }
-.text.markdown :deep(em) { font-style: italic; }
-.text.markdown :deep(code) { background: #f1f5f9; padding: 0.1rem 0.3rem; border-radius: 4px; font-family: monospace; font-size: 0.85em; }
-.text.markdown :deep(h2), .text.markdown :deep(h3), .text.markdown :deep(h4) { margin: 0.5rem 0 0.25rem; font-weight: 600; }
-.text.markdown :deep(h2) { font-size: 1.1rem; }
-.text.markdown :deep(h3) { font-size: 1rem; }
-.text.markdown :deep(h4) { font-size: 0.95rem; }
-.text.markdown :deep(ul) { margin: 0.25rem 0; padding-left: 1.25rem; list-style: disc; }
-.text.markdown :deep(li) { margin: 0.15rem 0; }
-.text.markdown :deep(a) { color: #2563eb; text-decoration: underline; word-break: break-word; }
-.text.markdown :deep(a:hover) { color: #1d4ed8; }
+/* Message rows */
+.message-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  animation: msgIn 0.25s ease-out both;
+}
+.message-row.user { flex-direction: row-reverse; }
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Avatars */
+.avatar {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+.bot-avatar svg { width: 32px; height: 32px; border-radius: 50%; }
+.user-avatar {
+  background: linear-gradient(135deg, #6F7DFF, #9D7BFF);
+  color: #fff;
+  letter-spacing: -0.03em;
+}
+
+/* Bubbles */
+.bubble {
+  max-width: 78%;
+  padding: 0.65rem 0.9rem;
+  border-radius: 18px;
+  line-height: 1.6;
+}
+
+/* Bot bubble — clean light card with left accent */
+.message-row.bot .bubble {
+  background: #f8f7ff;
+  color: #1e1b3a;
+  border: 1px solid rgba(111, 125, 255, 0.18);
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 2px 12px rgba(111, 125, 255, 0.08);
+}
+
+/* User bubble — brand gradient */
+.message-row.user .bubble {
+  background: linear-gradient(135deg, #6F7DFF 0%, #9D7BFF 100%);
+  color: #ffffff;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 4px 14px rgba(111, 125, 255, 0.4);
+}
+
+.sender {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  opacity: 0.55;
+  margin-bottom: 0.3rem;
+}
+.message-row.user .sender { text-align: right; }
+
+.text { font-size: 0.9rem; white-space: pre-wrap; }
+
+/* Animated typing dots */
+.typing-bubble { display: flex; flex-direction: column; }
+.typing-dots {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 2px;
+}
+.typing-dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #9D7BFF;
+  animation: bounce 1.2s infinite ease-in-out;
+}
+.typing-dots span:nth-child(1) { animation-delay: 0s; }
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30%            { transform: translateY(-6px); opacity: 1; }
+}
+
+/* Markdown inside bot bubbles */
+.text.markdown { white-space: normal; font-size: 0.9rem; }
+
+.text.markdown :deep(h2),
+.text.markdown :deep(h3),
+.text.markdown :deep(h4) {
+  margin: 0.5rem 0 0.1rem;
+  font-weight: 700;
+  color: #4c3fcf;
+  padding-left: 0.6rem;
+  border-left: 3px solid #9D7BFF;
+  line-height: 1.3;
+}
+.text.markdown :deep(h2) { font-size: 1rem; }
+.text.markdown :deep(h3) { font-size: 0.95rem; }
+.text.markdown :deep(h4) { font-size: 0.9rem; }
+
+.text.markdown :deep(strong) { font-weight: 700; color: #3730a3; }
+.text.markdown :deep(em) { font-style: italic; color: #6b5fc7; }
+
+.text.markdown :deep(ul) {
+  margin: 0.4rem 0;
+  padding-left: 0;
+  list-style: none;
+}
+.text.markdown :deep(li) {
+  position: relative;
+  padding-left: 1.1rem;
+  margin: 0.3rem 0;
+  line-height: 1.5;
+}
+.text.markdown :deep(li)::before {
+  content: '›';
+  position: absolute;
+  left: 0;
+  color: #9D7BFF;
+  font-weight: 700;
+  font-size: 1.1em;
+}
+
+.text.markdown :deep(code) {
+  background: rgba(111, 125, 255, 0.1);
+  color: #4c3fcf;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.85em;
+}
+
+.text.markdown :deep(a) {
+  color: #6F7DFF;
+  text-decoration: none;
+  font-weight: 500;
+  border-bottom: 1px solid rgba(111, 125, 255, 0.4);
+  word-break: break-word;
+  transition: color 0.15s, border-color 0.15s;
+}
+.text.markdown :deep(a:hover) {
+  color: #4c3fcf;
+  border-bottom-color: #4c3fcf;
+}
 
 /* >>> Brighter input section <<< */
 .input-area {
