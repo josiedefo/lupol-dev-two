@@ -5,7 +5,7 @@
       <button
         class="back-btn"
         type="button"
-        @click="goHome"
+        @click="handleBack"
         aria-label="Back to Home"
       >
         <svg class="back-ico" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -102,6 +102,13 @@
         </form>
       </div>
     </div>
+
+    <FeedbackWidget
+      :visitor-id="visitorId"
+      :has-messages="messages.some(m => m.from === 'bot' && m.text !== messages[0].text)"
+      :auto-open="triggerFeedback"
+      @done="onFeedbackDone"
+    />
   </div>
 </template>
 
@@ -109,9 +116,29 @@
 import { ref, nextTick, watch, onMounted, onBeforeUnmount } from 'vue'
 import { goHome } from '../viewState'
 import { ensureVisitorId } from '../analytics/client'
+import FeedbackWidget from './FeedbackWidget.vue'
 
 const visitorId = ref(ensureVisitorId()) // why: stable browser id reused across features
 const isMobile = ref(false)
+const triggerFeedback = ref(false)
+const feedbackSubmitted = ref(false)
+
+function hasBotReplies() {
+  return messages.value.some(m => m.from === 'bot' && m.text !== messages.value[0].text)
+}
+
+function handleBack() {
+  if (hasBotReplies() && !feedbackSubmitted.value) {
+    triggerFeedback.value = true  // auto-open feedback; onFeedbackDone() will call goHome()
+  } else {
+    goHome()
+  }
+}
+
+function onFeedbackDone() {
+  feedbackSubmitted.value = true
+  if (triggerFeedback.value) goHome()  // only navigate if triggered by Back/beforeunload
+}
 
 const messages = ref([
   { from: 'bot', text: 'Hi! I’m Lupol, your AI career assistant. I\'m here to help you switch careers with confidence. Tell me your strengths and passions—let’s find your best fit' },
@@ -166,12 +193,25 @@ function handleEnter(e) {
   // on mobile: let the default textarea behaviour create a new line
 }
 
-function onKey(e) { if (e.key === 'Escape') goHome() }
+function onKey(e) { if (e.key === 'Escape') handleBack() }
+
+function onBeforeUnload(e) {
+  if (hasBotReplies() && !feedbackSubmitted.value) {
+    triggerFeedback.value = true  // open widget in case user stays
+    e.preventDefault()
+    e.returnValue = ''  // required for Chrome — shows browser's "Leave site?" dialog
+  }
+}
+
 onMounted(() => {
   window.addEventListener('keydown', onKey)
+  window.addEventListener('beforeunload', onBeforeUnload)
   isMobile.value = window.matchMedia('(pointer: coarse)').matches
 })
-onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKey)
+  window.removeEventListener('beforeunload', onBeforeUnload)
+})
 
 /** Lightweight markdown parser for bot responses */
 function parseMarkdown(text) {
