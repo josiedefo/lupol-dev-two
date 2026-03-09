@@ -86,11 +86,11 @@ public class AdminController {
                 if (userMatcher.find()) {
                     visitorId = userMatcher.group(1).trim();
                     role = "user";
-                    text = userMatcher.group(2).trim();
+                    text = userMatcher.group(2).trim().replace("\\n", "\n");
                 } else if (assistantMatcher.find()) {
                     visitorId = assistantMatcher.group(1).trim();
                     role = "assistant";
-                    text = assistantMatcher.group(2).trim();
+                    text = assistantMatcher.group(2).trim().replace("\\n", "\n");
                 }
 
                 if (visitorId == null || visitorId.isBlank()) continue;

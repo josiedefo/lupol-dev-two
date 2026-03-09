@@ -39,10 +39,11 @@
       <aside class="sidebar">
         <div class="sidebar-toolbar">
           <span class="sidebar-label">Conversations</span>
-          <select v-model="hours" @change="fetchConversations" class="hours-select">
+          <select v-model="hours" @change="() => fetchConversations()" class="hours-select">
             <option value="24">Last 24 h</option>
             <option value="168">Last 7 days</option>
             <option value="720">Last 30 days</option>
+            <option value="2160">Last 90 days</option>
           </select>
         </div>
 
@@ -326,13 +327,17 @@ function parseMarkdown(text) {
 }
 .sidebar-label { font-size: .8rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; opacity: .6; }
 .hours-select {
-  background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.12);
+  background: #1e1b3a;
+  border: 1px solid rgba(255,255,255,.2);
   color: #fff;
   font-size: .8rem;
   border-radius: 6px;
   padding: .2rem .5rem;
   cursor: pointer;
+}
+.hours-select option {
+  background: #1e1b3a;
+  color: #fff;
 }
 .sidebar-empty, .sidebar-error {
   padding: 1rem;
@@ -377,6 +382,7 @@ function parseMarkdown(text) {
 }
 .thread-messages {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: 1rem;
   display: flex;
@@ -385,7 +391,7 @@ function parseMarkdown(text) {
 }
 
 /* Bubbles — same style as ChatAssistant */
-.message-row { display: flex; }
+.message-row { display: flex; flex-shrink: 0; }
 .message-row.user { justify-content: flex-end; }
 .message-row.assistant { justify-content: flex-start; }
 

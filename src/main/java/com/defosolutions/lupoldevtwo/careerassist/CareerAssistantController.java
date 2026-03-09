@@ -66,7 +66,7 @@ public class CareerAssistantController {
             .user(userInput)
             .call()
             .content();
-        log.info("Responding to user " + visitorId + " with: " + chatResponse);
+        log.info("Responding to user " + visitorId + " with: " + (chatResponse != null ? chatResponse.replace("\n", "\\n") : ""));
 
         return chatResponse;
     }
