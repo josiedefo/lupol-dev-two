@@ -109,7 +109,7 @@ function skip() {
 async function submit() {
   submitting.value = true
   try {
-    const res = await fetch('/lupoldevtwo/api/feedback', {
+    const res = await fetch('/api/feedback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

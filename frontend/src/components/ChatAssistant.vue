@@ -161,7 +161,7 @@ async function sendMessage() {
 
   try {
     const res = await fetch(
-      '/lupoldevtwo/career/chat?userInput=' + encodeURIComponent(text),
+      '/career/chat?userInput=' + encodeURIComponent(text),
       { method: 'POST', headers: { 'X-Visitor-Id': visitorId.value } }
     )
     if (!res.ok) throw new Error(`HTTP ${res.status}`)

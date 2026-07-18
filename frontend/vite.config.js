@@ -3,7 +3,7 @@ import vue from '@vitejs/plugin-vue'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/lupoldevtwo/',
+  base: '/',
 
   plugins: [vue()],
   esbuild: { target: 'es2018' },
@@ -26,19 +26,19 @@ export default defineConfig({
   optimizeDeps: { include: ['vue'], esbuildOptions: { target: 'es2018' } },
   server: {
     proxy: {
-      '/lupoldevtwo/career': {
+      '/career': {
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
-      '/lupoldevtwo/api/analytics': {
+      '/api/analytics': {
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
-      '/lupoldevtwo/api/feedback': {
+      '/api/feedback': {
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
-      '/lupoldevtwo/admin': {
+      '/admin': {
         target: 'http://localhost:8080',
         changeOrigin: true,
       },

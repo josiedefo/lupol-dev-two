@@ -55,10 +55,10 @@ export function sendVisitBeacon() {
   };
 
   const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-  const ok = navigator.sendBeacon('/lupoldevtwo/api/analytics/visit', blob);
+  const ok = navigator.sendBeacon('/api/analytics/visit', blob);
   console.log('Analytics beacon sent, ok=', ok);
   if (!ok) {
     // fallback
-    fetch('/lupoldevtwo/api/analytics/visit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), keepalive: true }).catch(() => {});
+    fetch('/api/analytics/visit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), keepalive: true }).catch(() => {});
   }
 }

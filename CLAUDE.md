@@ -31,12 +31,14 @@ cd frontend && npm run dev
 cd frontend && npm run build
 ```
 
-## Application Context Path
+## Endpoints
 
-All endpoints are served under `/lupoldevtwo/`:
-- Frontend: `http://localhost:8080/lupoldevtwo/`
-- Career chat API: `POST /lupoldevtwo/career/chat?userInput=...`
-- Analytics: `POST /lupoldevtwo/api/analytics/visit`
+Everything is served from the root path (no servlet context path):
+- Frontend: `http://localhost:8080/`
+- Career chat API: `POST /career/chat?userInput=...`
+- Analytics: `POST /api/analytics/visit`
+- Feedback: `POST /api/feedback`
+- Admin (requires `X-Admin-Token` header): `GET /admin/conversations`, `GET /admin/feedback`
 
 ## Architecture
 
@@ -47,6 +49,11 @@ src/main/java/com/defosolutions/lupoldevtwo/
 ├── LupolDevTwoApplication.java     # Main entry point
 ├── careerassist/
 │   └── CareerAssistantController.java  # AI chat endpoint using Spring AI ChatClient
+├── admin/
+│   └── AdminController.java        # Reads conversations + feedback back from CloudWatch Logs
+├── feedback/
+│   ├── FeedbackController.java     # Feedback submission endpoint
+│   └── FeedbackDTO.java            # Feedback data record
 └── analytics/web/
     ├── AnalyticsController.java    # Visit tracking endpoint
     ├── VisitDTO.java               # Visit data record
@@ -66,21 +73,24 @@ frontend/src/
 ├── analytics/client.ts     # Visitor tracking (generates UUID, sends beacons)
 └── components/
     ├── Home.vue            # Landing page
-    └── ChatAssistant.vue   # AI chat interface
+    ├── ChatAssistant.vue   # AI chat interface
+    ├── FeedbackWidget.vue  # Post-chat thumbs up/down + comment
+    └── AdminPage.vue       # Admin view: Conversations and Feedback tabs
 ```
 
 - **No Vue Router**: Uses `viewState.js` with URL query params (`?view=assistant`) for navigation
 - **Visitor ID**: Generated client-side UUID stored in cookie + localStorage, sent as `X-Visitor-Id` header to track conversation memory
-- Vite dev server proxies `/lupoldevtwo/career` and `/lupoldevtwo/api/analytics` to `localhost:8080`
+- Vite dev server proxies `/career`, `/api/analytics`, `/api/feedback`, and `/admin` to `localhost:8080`
 
 ### Build Pipeline
 
 1. Maven's `frontend-maven-plugin` installs Node and runs `npm install` + `npm run build`
 2. `maven-resources-plugin` copies `frontend/dist/` to `target/classes/static/`
-3. Spring Boot serves static files from `/static/` at context path `/lupoldevtwo/`
+3. Spring Boot serves static files from `/static/` at the root path `/`
 
 ## Configuration
 
 - `application.properties`: Base config with placeholder API key
 - `application-local.properties`: Local development config with real OpenAI API key (use `--spring.profiles.active=local`)
 - VSCode launch config available for debugging with local profile
+- Admin/CloudWatch settings (`admin.token`, `cloudwatch.log.group`, `cloudwatch.region`) live in `application.properties`; override in App Runner via the `ADMIN_TOKEN` and `CLOUDWATCH_LOG_GROUP` env vars

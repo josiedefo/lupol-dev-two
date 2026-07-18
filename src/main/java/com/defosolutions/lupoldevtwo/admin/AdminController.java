@@ -26,6 +26,8 @@ public class AdminController {
         Pattern.compile("Received user (.+?) input: (.+)", Pattern.DOTALL);
     private static final Pattern ASSISTANT_REPLY_PATTERN =
         Pattern.compile("Responding to user (.+?) with: (.+)", Pattern.DOTALL);
+    private static final Pattern FEEDBACK_PATTERN =
+        Pattern.compile("Feedback from (.+?): helpful=(.+?) comment=(.*)", Pattern.DOTALL);
 
     @Value("${admin.token}")
     private String adminToken;
@@ -124,6 +126,71 @@ public class AdminController {
 
         } catch (Exception e) {
             log.warning("CloudWatch fetch failed: " + e.getMessage());
+            return ResponseEntity.status(503).body(Map.of(
+                "error", "CloudWatch unavailable: " + e.getMessage(),
+                "hint", "Ensure the App Runner instance role has logs:FilterLogEvents permission and CLOUDWATCH_LOG_GROUP is set correctly."
+            ));
+        }
+    }
+
+    @GetMapping("/feedback")
+    public ResponseEntity<?> feedback(
+            @RequestHeader(value = "X-Admin-Token", required = false) String token,
+            @RequestParam(defaultValue = "24") int hours) {
+
+        if (token == null || !adminToken.equals(token)) {
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid or missing admin token"));
+        }
+
+        try {
+            CloudWatchLogsClient client = CloudWatchLogsClient.builder()
+                .region(Region.of(awsRegion))
+                .credentialsProvider(DefaultCredentialsProvider.create())
+                .build();
+
+            Instant startTime = Instant.now().minus(hours, ChronoUnit.HOURS);
+
+            List<FilteredLogEvent> events = new ArrayList<>();
+            String nextToken = null;
+
+            do {
+                FilterLogEventsRequest.Builder requestBuilder = FilterLogEventsRequest.builder()
+                    .logGroupName(logGroup)
+                    .filterPattern("\"Feedback from\"")
+                    .startTime(startTime.toEpochMilli())
+                    .limit(500);
+                if (nextToken != null) requestBuilder.nextToken(nextToken);
+
+                var response = client.filterLogEvents(requestBuilder.build());
+                events.addAll(response.events());
+                nextToken = response.nextToken();
+            } while (nextToken != null && events.size() < 1000);
+
+            client.close();
+
+            List<Map<String, Object>> result = new ArrayList<>();
+            for (FilteredLogEvent event : events) {
+                Matcher m = FEEDBACK_PATTERN.matcher(event.message());
+                if (!m.find()) continue;
+                String visitorId = m.group(1).trim();
+                String helpfulStr = m.group(2).trim();
+                String comment = m.group(3).trim().replace("\\n", "\n");
+                Boolean helpful = "true".equalsIgnoreCase(helpfulStr) ? Boolean.TRUE
+                                : "false".equalsIgnoreCase(helpfulStr) ? Boolean.FALSE
+                                : null;
+                Map<String, Object> entry = new HashMap<>();
+                entry.put("visitorId", visitorId);
+                entry.put("helpful", helpful);
+                entry.put("comment", comment.isEmpty() ? null : comment);
+                entry.put("timestamp", event.timestamp());
+                result.add(entry);
+            }
+
+            result.sort(Comparator.comparingLong(m -> -((Long) m.get("timestamp"))));
+            return ResponseEntity.ok(result);
+
+        } catch (Exception e) {
+            log.warning("CloudWatch feedback fetch failed: " + e.getMessage());
             return ResponseEntity.status(503).body(Map.of(
                 "error", "CloudWatch unavailable: " + e.getMessage(),
                 "hint", "Ensure the App Runner instance role has logs:FilterLogEvents permission and CLOUDWATCH_LOG_GROUP is set correctly."
