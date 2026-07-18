@@ -29,7 +29,9 @@ public class CareerAssistantController {
     public String chat(@RequestParam(defaultValue = "What career can I do if I like to dance a lot?") String userInput, 
         @RequestHeader(value = "X-Visitor-Id", required = false) String visitorIdHeader) {
         
-        String visitorId = (visitorIdHeader != null && !visitorIdHeader.isBlank()) ? visitorIdHeader : "";
+        String visitorId = (visitorIdHeader != null && !visitorIdHeader.isBlank())
+            ? visitorIdHeader
+            : "default";
         log.info("Received user " + visitorId + " input: " + userInput);
 
         var systemInstructions = """
@@ -64,6 +66,7 @@ public class CareerAssistantController {
         String chatResponse =  chatClient.prompt()
             .system(systemInstructions)
             .user(userInput)
+            .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, visitorId))
             .call()
             .content();
         log.info("Responding to user " + visitorId + " with: " + (chatResponse != null ? chatResponse.replace("\n", "\\n") : ""));
