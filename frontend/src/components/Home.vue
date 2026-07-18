@@ -1,7 +1,7 @@
 <!-- /src/pages/Home.vue (imports + usage cleaned) -->
 <template>
   <div class="relative min-h-full overflow-hidden text-white bg-lupol-950">
-    <div class="absolute inset-0 -z-10 bg-gradient-to-b from-[#2a1d79] via-[#2b1a6b] to-[#160e3a]" aria-hidden="true"></div>
+    <div class="absolute inset-0 -z-10 bg-linear-to-b from-[#2a1d79] via-[#2b1a6b] to-[#160e3a]" aria-hidden="true"></div>
     <div class="absolute inset-x-0 top-0 h-[60vh] -z-10"
          style="background: radial-gradient(60% 60% at 50% 0%, rgba(122,91,255,0.35) 0%, rgba(122,91,255,0.05) 50%, rgba(0,0,0,0) 100%);" aria-hidden="true" />
 
@@ -18,7 +18,7 @@
           <li><a class="hover:text-white transition" href="#">Community</a></li>
           <li><a class="hover:text-white transition" href="#">Sign In</a></li>
         </ul-->
-        <button @click="goAssistant" class="inline-flex items-center justify-center rounded-2xl bg-[#6F7DFF] px-5 py-3 font-semibold text-[15px] shadow-[0_8px_24px_rgba(111,125,255,0.45)] hover:shadow-[0_12px_28px_rgba(111,125,255,0.6)] active:translate-y-[1px] transition">
+        <button @click="goAssistant" class="inline-flex items-center justify-center rounded-2xl bg-[#6F7DFF] px-5 py-3 font-semibold text-[15px] shadow-[0_8px_24px_rgba(111,125,255,0.45)] hover:shadow-[0_12px_28px_rgba(111,125,255,0.6)] active:translate-y-px transition">
           Get Started With Career Matching
           <svg class="ml-2 h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M7 4l6 6-6 6"/></svg>
         </button>
@@ -26,7 +26,7 @@
     </header>
 
     <main class="container mx-auto px-6 pt-6 pb-16 md:pb-24">
-      <div class="inline-flex items-center gap-3 rounded-full bg-white/5 ring-1 ring-white/10 px-4 py-2 backdrop-blur">
+      <div class="inline-flex items-center gap-3 rounded-full bg-white/5 ring-1 ring-white/10 px-4 py-2 backdrop-blur-sm">
         <span class="relative inline-flex h-2.5 w-2.5">
           <span class="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping"></span>
           <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
@@ -99,7 +99,7 @@
         <p class="mt-2 text-white/80">Join 5,000+ professionals who've discovered their ideal career pivot.</p>
 
         <button @click="goAssistant"
-          class="mt-6 inline-flex items-center justify-center rounded-2xl bg-[#6F7DFF] px-6 py-3 font-semibold shadow-[0_8px_24px_rgba(111,125,255,0.45)] hover:shadow-[0_12px_28px_rgba(111,125,255,0.6)] active:translate-y-[1px] transition">
+          class="mt-6 inline-flex items-center justify-center rounded-2xl bg-[#6F7DFF] px-6 py-3 font-semibold shadow-[0_8px_24px_rgba(111,125,255,0.45)] hover:shadow-[0_12px_28px_rgba(111,125,255,0.6)] active:translate-y-px transition">
           Find My Career Match
           <svg class="ml-2 h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M7 4l6 6-6 6"/></svg>
         </button>
