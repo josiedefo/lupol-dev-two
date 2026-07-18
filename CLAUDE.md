@@ -8,8 +8,8 @@ Lupol Dev Two is a career assistant web application that helps users explore car
 
 ## Tech Stack
 
-- **Backend**: Spring Boot 3.5.8, Java 21, Spring AI with OpenAI
-- **Frontend**: Vue 3 (Composition API, `<script setup>`), Vite 7, Tailwind CSS
+- **Backend**: Spring Boot 4.1, Java 21, Spring AI 2.0 with OpenAI
+- **Frontend**: Vue 3 (Composition API, `<script setup>`), Vite 8 (Rolldown), Tailwind CSS 4 (CSS-first config in `style.css` — no `tailwind.config` file)
 - **Build**: Maven with frontend-maven-plugin (builds frontend during Maven compile)
 
 ## Build & Run Commands
